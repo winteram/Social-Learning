@@ -100,13 +100,21 @@ for generation in range(ngen):
                 
             # create dictionary of actions & payoffs to add to repertoire
             for model in models:
-                
+                for action,payoff in aliveAgents[model]["rep"]:
+                    if action not in aliveAgents[i]["rep"]:
+                        observed_acts[action] = payoff # plus random noise
             
             # add copy errors
+            for action in observed_acts:
+                if random.rand() < copy_error: # SYNTAXERROR
+                    observed_acts[action] = 0
 
             # add to repertoire
+            aliveAgents[i]["rep"].extend(observed_acts)  # SYNTAXERROR
 			
         # if exploit, add payoff to agent's total
+        elif move>0 and move < 100:
+            
 		
         # Write agent's move
 		
