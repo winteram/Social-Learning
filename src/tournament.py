@@ -31,7 +31,7 @@ pmut = 0.04 # probability of mutation
 pmig = 0.03 # probability of migration (if spatial extension is enabled)
 
 # structure for a new agent
-newagent = {"strategy":initStrategy, "rep":{}, "history":{"historyRounds":[],"historyMoves":[],"historyActs":[],"historyPayoffs":[], "historyDemes":[]}, "roundsAlive": 0 , "currentDeme": 0}
+newagent = {"strategy":initStrategy, "rep":{}, "lastmove":-99, "history":{"historyRounds":[],"historyMoves":[],"historyActs":[],"historyPayoffs":[], "historyDemes":[]}, "roundsAlive": 0 , "currentDeme": 0}
 
 # Initialize structures in model
 payoff = [] # payoff landscape
@@ -55,7 +55,7 @@ else:
 for generation in range(ngen): 
     # Loop through each agent
     for i in range(N):
-	# get strategy from agent
+	# get strategy from agent (call function named "strategy")
 	move, currentRep, observe_who = globals()[aliveAgents[i]["strategy"]](aliveAgents[i]["roundsAlive"],aliveAgents[i]["rep"],aliveAgents[i]["history"])
 	# Do move:
         # if innovate, pick unknown behavior
@@ -68,6 +68,7 @@ for generation in range(ngen):
                 act = random.choice(unknownActs)
                 payoff = payoff[aliveAgents[i]["currentDeme"]][act]
                 aliveAgents[i]["rep"][act] = payoff
+            aliveAgents[i]["lastmove"] = -1
             aliveAgents[i]["history"]["historyRounds"][] = generation
             aliveAgents[i]["history"]["historyMoves"][] = -1
             aliveAgents[i]["history"]["historyActs"][] = act
@@ -76,25 +77,38 @@ for generation in range(ngen):
 
         # if observe:
         elif move == 0:
+            exploiters = []
+            observed_acts = {}
             # if there is anyone to observe
-            if len(exploiters) > 0:
-                models = []
+            for j in len(aliveAgents):
+                if j != i and aliveAgents[j]["lastmove"]>0:
+                    exploiters.append(j)
+
+            models = []
+            # if observe_who extension is enabled
+            if canChooseModel:
                 for model in range(min(len(exploiters),nObserve)):
-                    
-                # if observe_who extension is enabled
-                if canChooseModel:
-                    
-					# verify their models are acceptable
-				# else
-					# select random group to observe from
-				# add copy errors
-				# add to repertoire
+                    if observe_who[model] in exploiters:
+                        models[model] = observe_who[model]
+            # else
+            else:
+                # select random group to observe from
+                if nObserve < len(exploiters):
+                    models = random.sample(exploiters,nObserve)
+                else:
+                    models = exploiters
+                
+            # create dictionary of actions & payoffs to add to repertoire
+            for model in models:
+                
+            
+            # add copy errors
+
+            # add to repertoire
 			
-			# if exploit, add payoff to agent's total
+        # if exploit, add payoff to agent's total
 		
-		
-	
-		# Write agent's move
+        # Write agent's move
 		
 	# Write summary statistics for round
 
