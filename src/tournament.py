@@ -30,8 +30,11 @@ pchg = 0.05 # probability of environment changing
 pmut = 0.04 # probability of mutation
 pmig = 0.03 # probability of migration (if spatial extension is enabled)
 
+copy_error = 0.01
+sigma = 0.2
+
 # structure for a new agent
-newagent = {"strategy":initStrategy, "rep":{}, "lastmove":-99, "history":{"historyRounds":[],"historyMoves":[],"historyActs":[],"historyPayoffs":[], "historyDemes":[]}, "roundsAlive": 0 , "currentDeme": 0}
+newagent = {"strategy":initStrategy, "rep":{}, "lastmove":-99, "history":{"historyRounds":[],"historyMoves":[],"historyActs":[],"historyPayoffs":[], "historyDemes":[]}, "roundsAlive": 0 , "currentDeme": 0, "pointsEarned": 0}
 
 # Initialize structures in model
 payoff = [] # payoff landscape
@@ -102,7 +105,7 @@ for generation in range(ngen):
             for model in models:
                 for action,payoff in aliveAgents[model]["rep"]:
                     if action not in aliveAgents[i]["rep"]:
-                        observed_acts[action] = payoff # plus random noise
+                        observed_acts[action] = payoff + random.gauss(0,sigma)
             
             # add copy errors
             for action in observed_acts:
@@ -114,13 +117,18 @@ for generation in range(ngen):
 			
         # if exploit, add payoff to agent's total
         elif move>0 and move < 100:
+            aliveAgents[i]["pointsEarned"] += payoff[aliveAgents[i]["currentDeme"]][move]
+        
+        # if refine
+        elif move==-2 and canPlayRefine:
             
-		
+
         # Write agent's move
-		
+            
 	# Write summary statistics for round
 
-	# Kill N random agents
+# Kill N random agents
+            
 
 	# Choose N individuals to reproduce based on current relative fitness
 
@@ -129,5 +137,7 @@ for generation in range(ngen):
 	# Write statistics for reproduction
 
 	# Change environment
+
+        # Move agents if demes are enabled
 
 # Write summaries for entire run
