@@ -6,19 +6,20 @@ import random
 import sys, os
 import logging
 from scipy.stats import bernoulli,poisson,norm,expon,uniform
+from moves import * #bring in standard names for moves
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger=logging.getLogger('SLSTournament')
 
-# Each strategy must have two functions, "makeMove" and "observe"
-# "makeMove" takes as input: 
+# Each strategy must have two functions, "move" and "observe"
+# "move" takes as input: 
 #    canPlayRefine, canChooseModel, currentDeme, roundsAlive, repertoire, history
-# "makeMove"  must return: 
+# "move"  must return: 
 #    move, action, currentRep
-# "observeWho" takes as input:
+# "observe_who" takes as input:
 #    modelInfo, a list of dictionaries, one for each potential model, with the info:
 #       age, total payoff, times observed, # offspring
-# "observeWho" must return:
+# "observe_who" must return:
 #    models, an ordered list of indices corresponding to modelInfo
 
 # Load agents from agent directory
@@ -41,7 +42,7 @@ canChooseModel = True # if observe_who is an option
 multipleDemes = True # if spatial extension is enabled
 runIn = False # If there is a run-in time for the agents to develop
 
-N = 100 # population size
+N = 100 # initial population size
 ngen = 10000 # number of generations
 nact = 100 # number of possible actions
 
@@ -108,28 +109,32 @@ for generation in range(ngen):
     # initialize stats for this round
     gameStats[] = roundStats
 
-    # create this round's data to pass to observeWho function
+    # create this round's data to pass to observe_who function
     if canChooseModel:
         modelInfo = []
         for i in aliveAgents:
-            modelInfo[] = {"age":Agents[i]["roundsAlive"],
-                           "totalPoints":Agents[i]["pointsEarned"],
-                           "nObserved":Agents[i]["nObserved"],
-                           "nOffspring":Agents[i]["nOffspring"]}
+            modelInfo[] = (Agents[i]["roundsAlive"],
+                           Agents[i]["pointsEarned"],
+                           Agents[i]["nObserved"],
+                           Agents[i]["nOffspring"])
 
     # Loop through each agent
     for i in aliveAgents:
-	# get strategy from agent (call function named "strategy")
-	agentAction = globals()[Agents[i]["strategy"]].makeMove(canPlayRefine, canChooseModel,Agents[i]["currentDeme"], Agents[i]["roundsAlive"],Agents[i]["rep"],Agents[i]["history"])
-
-        # Catch bad strategy output
-        if move not in agentAction.keys():
-            logger.error("Agent " + i + " did not return a move")
-            continue
-
+	# get strategy from agent (call function "move" from imported strategy)
+	agentMove, agentAction = globals()[Agents[i]["strategy"]].move(Agents[i]["roundsAlive"], 
+                                                                       Agents[i]["rep"], 
+                                                                       Agents[i]["history"]["historyRounds"], 
+                                                                       Agents[i]["history"]["historyMoves"], 
+                                                                       Agents[i]["history"]["historyActs"], 
+                                                                       Agents[i]["history"]["historyPayoffs"], 
+                                                                       Agents[i]["history"]["historyDemes"], 
+                                                                       Agents[i]["currentDeme"],
+                                                                       canChooseModel,
+                                                                       canPlayRefine,
+                                                                       multipleDemes)
 	# Do move:
         # INNOVATE
-        if agentAction["move"] == "INNOVATE":
+        if agentMove == INNOVATE:
             gameStats[generation][Agents[i]["strategy"]]["innovate"] += 1
             unknownActs = set(payoff[Agents[i]["currentDeme"]].keys()) - set(Agents[i]["rep"].keys())
             if len(unknownActs) > 0:
@@ -138,23 +143,23 @@ for generation in range(ngen):
                 Agents[i]["rep"][act] = payoff
 
         # OBSERVE:
-        elif agentAction["move"] == "OBSERVE":
+        elif agentMove == OBSERVE:
             gameStats[generation][Agents[i]["strategy"]]["observe"] += 1
             payoff = 0
             exploiters = []
             observed_acts = {}
 
             # can only observe agents in same deme who exploited on last round
-            for j in len(Agents):
-                if j != i and Agents[j]["lastMove"]=="EXPLOIT" and Agents[i]["currentDeme"]==Agents[j]["currentDeme"]:
+            for j in aliveAgents:
+                if j != i and Agents[j]["lastMove"]==EXPLOIT and Agents[i]["currentDeme"]==Agents[j]["currentDeme"]:
                     exploiters.append(j)
 
             models = []
             # if observe_who extension is enabled
             if canChooseModel:
-                # get ordered list of models (call observeWho function)
-                rankedModels = globals()[Agents[i]["strategy"]].observeWho(modelInfo)
-                #TODO: handle no observeWho function
+                # get ordered list of models (call observe_who function)
+                rankedModels = globals()[Agents[i]["strategy"]].observe_who(modelInfo)
+                #TODO: handle no observe_who function
                 #TODO: handle ranked models length < exploiters length
                 for j in range(min(len(rankedModels),nObserve)):
                     if rankedModels[j] in exploiters:
@@ -183,29 +188,33 @@ for generation in range(ngen):
             Agents[i]["rep"].extend(observed_acts) 
 			
         # EXPLOIT
-        elif agentAction["move"] == "EXPLOIT":
+        elif agentMove == EXPLOIT:
             gameStats[generation][Agents[i]["strategy"]]["exploit"] += 1
-            if agentAction["action"]>0 and agentAction["action"] < 100:
-            if agentAction["action"] in agentAction["rep"].keys():
-                payoff = payoff[Agents[i]["currentDeme"]][agentAction["action"]] + 1
+            if agentAction>0 and agentAction < 100:
+            if agentAction in agentAction["rep"].keys():
+                payoff = payoff[Agents[i]["currentDeme"]][agentAction] + 1
                 Agents[i]["pointsEarned"] += payoff
-                Agents[i]["rep"][agentAction["action"]] = payoff
+                Agents[i]["rep"][agentAction] = payoff
                 gameStats[generation][Agents[i]["strategy"]]["totalPayoffs"] += payoff
             else:
                 logger.error("Agent " + i + " exploited action not in its repertoire")
         
         # REFINE
-        elif agentAction["move"] == "REFINE" and canPlayRefine:
+        elif agentMove == REFINE and canPlayRefine:
             gameStats[generation][Agents[i]["strategy"]]["refine"] += 1
-            if agentAction["action"] in agentAction["rep"].keys():
-                payoff = payoff[Agents[i]["currentDeme"]][agentAction["action"]] + 1
-                agentAction["rep"][agentAction["action"]] = payoff
+            if agentAction in Agents[i]["rep"].keys():
+                payoff = payoff[Agents[i]["currentDeme"]][agentAction] + 1
+                agentAction["rep"][agentAction] = payoff
+
+        else:
+            logger.error("Agent " + str(i) + " did not return a move or returned an invalid move: " + str(agentMove))
+            continue
 
         # Write agent's move
-        Agents[i]["lastMove"] = agentAction["move"]
+        Agents[i]["lastMove"] = agentMove
         Agents[i]["history"]["historyRounds"][] = generation
-        Agents[i]["history"]["historyMoves"][] = agentAction["move"]
-        Agents[i]["history"]["historyActs"][] = agentAction["action"]
+        Agents[i]["history"]["historyMoves"][] = agentMove
+        Agents[i]["history"]["historyActs"][] = agentAction
         Agents[i]["history"]["historyPayoffs"][] = payoff
         Agents[i]["history"]["historyDemes"][] = Agents[i]["currentDeme"]
 
@@ -217,6 +226,7 @@ for generation in range(ngen):
     aliveAgents.slice(-Math.floor(pdie*len(AliveAgents))) # CHECK SYNTAX
 
     # Choose N individuals to reproduce based on current relative fitness
+    # get sum of average lifetime payoffs
     for i in aliveAgents:
         if random.random() < Agents[i]["total"] / Agents[i]["roundsAlive"]:
             # reproduce
