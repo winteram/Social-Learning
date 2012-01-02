@@ -8,10 +8,7 @@ import logging
 import pprint
 import datetime
 from scipy.stats import bernoulli,poisson,norm,expon,uniform
-<<<<<<< HEAD
-=======
 from numpy import mean,std,median,max
->>>>>>> first working version of tournament
 from moves import * #bring in standard names for moves
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -56,8 +53,6 @@ except IOError:
     print 'cannot open', outputFname
     exit(0)
 
-
-
 ##TODO: Allow importing of parameters with input file
 # Initialize parameters in model
 canPlayRefine = False # if refine move is available
@@ -66,11 +61,7 @@ multipleDemes = False # if spatial extension is enabled
 runIn = False # If there is a run-in time for the agents to develop
 
 N = 100 # initial population size
-<<<<<<< HEAD
-ngen = 10000 # number of generations
-=======
-ngen = 1000 # number of generations
->>>>>>> first working version of tournament
+ngen = 100 # number of generations
 nact = 100 # number of possible actions
 nObserve = 5 # number of models, between 1--10
 
@@ -134,7 +125,6 @@ for i in range(3):
 aliveAgents = []
 Agents = []
 
-outputFH.write("generation,strategy,nAgents,nInnovate,nObserve,nExploit,nRefine,totalPayoffs,avgLifespan,stdLifespan,medLifespan,maxLifespan\n")
 
 # Initialize stats
 class statsDict:
@@ -193,43 +183,16 @@ for generation in range(ngen):
     if canChooseModel:
         modelInfo = []
         for i in aliveAgents:
-<<<<<<< HEAD
-            modelInfo[] = (Agents[i]["roundsAlive"],
-                           Agents[i]["pointsEarned"],
-                           Agents[i]["nObserved"],
-                           Agents[i]["nOffspring"])
-=======
             modelInfo.append([Agents[i].roundsAlive,
                              Agents[i].pointsEarned,
                              Agents[i].nObserved,
                              Agents[i].nOffspring])
->>>>>>> first working version of tournament
 
     # Calculate total mean lifetime payoff for reproduction
     totalMeanPayoff = 0
     # Loop through each agent
     for i in aliveAgents:
-<<<<<<< HEAD
-	# get strategy from agent (call function "move" from imported strategy)
-	agentMove, agentAction = globals()[Agents[i]["strategy"]].move(Agents[i]["roundsAlive"], 
-                                                                       Agents[i]["rep"], 
-                                                                       Agents[i]["history"]["historyRounds"], 
-                                                                       Agents[i]["history"]["historyMoves"], 
-                                                                       Agents[i]["history"]["historyActs"], 
-                                                                       Agents[i]["history"]["historyPayoffs"], 
-                                                                       Agents[i]["history"]["historyDemes"], 
-                                                                       Agents[i]["currentDeme"],
-                                                                       canChooseModel,
-                                                                       canPlayRefine,
-                                                                       multipleDemes)
-	# Do move:
-        # INNOVATE
-        if agentMove == INNOVATE:
-            gameStats[generation][Agents[i]["strategy"]]["innovate"] += 1
-            unknownActs = set(payoff[Agents[i]["currentDeme"]].keys()) - set(Agents[i]["rep"].keys())
-=======
 	# teststring = globals()[Agents[i].strategy].test("a test signal")
-        roundStats[Agents[i].strategy].aliveAgents += 1
 	# get strategy from agent (call function "move" from imported strategy)
 	theMove = globals()[Agents[i].strategy].move(Agents[i].roundsAlive, Agents[i].rep, Agents[i].historyRounds, Agents[i].historyMoves, Agents[i].historyActs, Agents[i].historyPayoffs, Agents[i].historyDemes, Agents[i].currentDeme, canChooseModel,canPlayRefine,multipleDemes)
         agentMove = theMove[0]
@@ -240,7 +203,6 @@ for generation in range(ngen):
         if agentMove == INNOVATE:
             roundStats[Agents[i].strategy].innovate += 1
             unknownActs = set(range(100)) - set(Agents[i].rep.keys())
->>>>>>> first working version of tournament
             if len(unknownActs) > 0:
                 agentAction = random.choice(list(unknownActs))
                 payoff = fitness[Agents[i].currentDeme][agentAction]
@@ -248,34 +210,22 @@ for generation in range(ngen):
 
         # OBSERVE:
         elif agentMove == OBSERVE:
-<<<<<<< HEAD
-            gameStats[generation][Agents[i]["strategy"]]["observe"] += 1
-=======
             agentAction = -1
             roundStats[Agents[i].strategy].observe += 1
->>>>>>> first working version of tournament
             payoff = 0
             exploiters = []
             observed_acts = {}
 
             # can only observe agents in same deme who exploited on last round
             for j in aliveAgents:
-<<<<<<< HEAD
-                if j != i and Agents[j]["lastMove"]==EXPLOIT and Agents[i]["currentDeme"]==Agents[j]["currentDeme"]:
-=======
                 if j != i and Agents[j].lastMove==EXPLOIT and Agents[i].currentDeme==Agents[j].currentDeme:
->>>>>>> first working version of tournament
                     exploiters.append(j)
 
             models = []
             # if observe_who extension is enabled
             if canChooseModel:
                 # get ordered list of models (call observe_who function)
-<<<<<<< HEAD
-                rankedModels = globals()[Agents[i]["strategy"]].observe_who(modelInfo)
-=======
                 rankedModels = globals()[Agents[i].strategy].observe_who(modelInfo)
->>>>>>> first working version of tournament
                 #TODO: handle no observe_who function
                 #TODO: handle ranked models length < exploiters length
                 for j in range(min(len(rankedModels),nObserve)):
@@ -306,15 +256,6 @@ for generation in range(ngen):
 			
         # EXPLOIT
         elif agentMove == EXPLOIT:
-<<<<<<< HEAD
-            gameStats[generation][Agents[i]["strategy"]]["exploit"] += 1
-            if agentAction>0 and agentAction < 100:
-            if agentAction in agentAction["rep"].keys():
-                payoff = payoff[Agents[i]["currentDeme"]][agentAction] + 1
-                Agents[i]["pointsEarned"] += payoff
-                Agents[i]["rep"][agentAction] = payoff
-                gameStats[generation][Agents[i]["strategy"]]["totalPayoffs"] += payoff
-=======
             roundStats[Agents[i].strategy].exploit += 1
             if agentAction >= 0 and agentAction < 100:
                 if agentAction in Agents[i].rep.keys():
@@ -324,52 +265,21 @@ for generation in range(ngen):
                     roundStats[Agents[i].strategy].totalPayoffs += payoff
                 else:
                     logger.error("Agent " + str(i) + " exploited action not in its repertoire")
->>>>>>> first working version of tournament
             else:
                 logger.error("Agent " + str(i) + " made an action less than 0 or grater than 100")
         
         # REFINE
         elif agentMove == REFINE and canPlayRefine:
-<<<<<<< HEAD
-            gameStats[generation][Agents[i]["strategy"]]["refine"] += 1
-            if agentAction in Agents[i]["rep"].keys():
-                payoff = payoff[Agents[i]["currentDeme"]][agentAction] + 1
-                agentAction["rep"][agentAction] = payoff
-=======
             roundStats[Agents[i].strategy].refine += 1
             if agentAction in Agents[i].rep.keys():
                 payoff = fitness[Agents[i].currentDeme][agentAction] + 1
                 Agents[i].rep[agentAction] = payoff
->>>>>>> first working version of tournament
 
         else:
             logger.error("Agent " + str(i) + " did not return a move or returned an invalid move: " + str(agentMove))
             continue
 
         # Write agent's move
-<<<<<<< HEAD
-        Agents[i]["lastMove"] = agentMove
-        Agents[i]["history"]["historyRounds"][] = generation
-        Agents[i]["history"]["historyMoves"][] = agentMove
-        Agents[i]["history"]["historyActs"][] = agentAction
-        Agents[i]["history"]["historyPayoffs"][] = payoff
-        Agents[i]["history"]["historyDemes"][] = Agents[i]["currentDeme"]
-
-        # Write lifespan info
-        gameStats[generation][Agents[i]["strategy"]]["lifespans"][] = Agents[i]["roundsAlive"]        
-
-    # Kill N random agents
-    aliveAgents.shuffle()
-    aliveAgents.slice(-Math.floor(pdie*len(AliveAgents))) # CHECK SYNTAX
-
-    # Choose N individuals to reproduce based on current relative fitness
-    # get sum of average lifetime payoffs
-    for i in aliveAgents:
-        if random.random() < Agents[i]["total"] / Agents[i]["roundsAlive"]:
-            # reproduce
-
-    # Randomly mutate x% of N new births
-=======
         Agents[i].lastMove = agentMove
         Agents[i].historyRounds.append(generation)
         Agents[i].historyMoves.append(agentMove)
@@ -382,21 +292,19 @@ for generation in range(ngen):
         totalMeanPayoff += Agents[i].pointsEarned / Agents[i].roundsAlive
         roundStats[Agents[i].strategy].lifespans.append(Agents[i].roundsAlive)
 
-    if totalMeanPayoff > 0:
-        # Kill N random agents
-        ndie = 0
-        for i in range(len(aliveAgents)):
-            if random.random() < pdie:
-                ndie +=1
-        random.shuffle(aliveAgents)
-        del aliveAgents[0:ndie]
+    # Kill N random agents
+    ndie = 0
+    for i in range(len(aliveAgents)):
+        if random.random() < pdie:
+            ndie +=1
+    random.shuffle(aliveAgents)
+    del aliveAgents[0:ndie]
 
-        # Choose N individuals to reproduce based on current relative fitness
-        # get sum of average lifetime payoffs
-        newAgents = []
-
-        while len(newAgents) < ndie:
-            i = random.choice(aliveAgents)
+    # Choose N individuals to reproduce based on current relative fitness
+    # get sum of average lifetime payoffs
+    newAgents = []
+    for i in aliveAgents:
+        if totalMeanPayoff > 0:
             if random.random() < (Agents[i].pointsEarned / Agents[i].roundsAlive)/totalMeanPayoff:
                 if random.random() < pmut:
                     initStrategy = random.choice(strategies)
@@ -407,8 +315,7 @@ for generation in range(ngen):
                 Agents[len(Agents)-1].strategy = initStrategy
                 Agents[len(Agents)-1].born = generation
                 newAgents.append(len(Agents)-1) # list of currently playing agents
-        aliveAgents.extend(newAgents)
->>>>>>> first working version of tournament
+    aliveAgents.extend(newAgents)
 
     ##TODO Write statistics for reproduction
 
