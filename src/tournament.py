@@ -25,6 +25,7 @@ logger=logging.getLogger('SLSTournament')
 # "observe_who" must return:
 #    models, an ordered list of indices corresponding to modelInfo
 
+logger.info("Loading agents")
 # Load agents from agent directory
 agent_dir = 'agents/'
 agentfiles = os.listdir(agent_dir)
@@ -54,11 +55,11 @@ except IOError:
     exit(0)
 
 
-
+logger.info("Initializing...")
 ##TODO: Allow importing of parameters with input file
 # Initialize parameters in model
-canPlayRefine = False # if refine move is available
-canChooseModel = False # if observe_who is an option
+canPlayRefine = True # if refine move is available
+canChooseModel = True # if observe_who is an option
 multipleDemes = False # if spatial extension is enabled
 runIn = False # If there is a run-in time for the agents to develop
 
@@ -174,10 +175,12 @@ else:
         Agents[i].strategy = initStrategy
         aliveAgents.append(i) # list of currently playing agents
 
-
+logger.info("Starting run")
 # Loop through each generation
 for generation in range(ngen): 
     # initialize stats for this round
+    if generation % 100 == 0:
+        logger.info("Starting generation %d", generation) 
     roundStats = {}
     for strategy in strategies:
         roundStats[strategy] = statsDict()
