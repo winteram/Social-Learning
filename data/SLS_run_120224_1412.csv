@@ -1,0 +1,7 @@
+generation,strategy,nAgents,nInnovate,nObserve,nExploit,nRefine,totalPayoffs,avgLifespan,stdLifespan,medLifespan,maxLifespan
+0,estagent,47,0,47,0,0,0,1.0,0.0,1.0,1
+0,exagent,53,53,0,0,0,0,1.0,0.0,1.0,1
+1,estagent,47,47,0,0,0,0,2.0,0.0,2.0,2
+1,exagent,53,0,0,53,0,438.0,2.0,0.0,2.0,2
+2,estagent,45,0,45,0,0,0,3.0,0.0,3.0,3
+2,exagent,55,2,0,53,0,438.0,2.92727272727,0.374386550581,3.0,3
