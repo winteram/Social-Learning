@@ -149,10 +149,13 @@ class statsDict:
         outputline += str(self.exploit)+","
         outputline += str(self.refine)+","
         outputline += str(self.totalPayoffs)+","
-        outputline += str(mean(self.lifespans))+","
-        outputline += str(std(self.lifespans))+","
-        outputline += str(median(self.lifespans))+","
-        outputline += str(max(self.lifespans))
+        if len(self.lifespans)>0:
+            outputline += str(mean(self.lifespans))+","
+            outputline += str(std(self.lifespans))+","
+            outputline += str(median(self.lifespans))+","
+            outputline += str(max(self.lifespans))
+        else:
+            outputline += "0,0,0,0"
         return outputline
 
 

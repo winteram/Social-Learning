@@ -19,16 +19,17 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
         # check if demes are enabled
         if multipleDemes and historyDemes[-REGROUND].count(currentDeme) < REGROUND and len(rep.items())<ACTTHRESH:
             return (OBSERVE,)
-        if len(rep.items()) < 10:
+
+        if len(rep.items()) < 10 or np.std(rep.values())==0:
             return (OBSERVE,)
         else:
             params = ss.expon.fit(rep.values())
             exp_decision = estimate_payoff(max(rep.values()),max(EXPECTED_LIFETIME-roundsAlive,10),'Expon',params)
 #            params = ss.poisson.fit(rep.values())
 #            poi_decision = estimate_payoff(max(rep.values()),max(EXPECTED_LIFETIME-roundsAlive,10),'Poiss',params)
-            params = ss.gamma.fit(rep.values())
-            gma_decision = estimate_payoff(max(rep.values()),max(EXPECTED_LIFETIME-roundsAlive,10),'Gamma',params)
-            if exp_decision + gma_decision > 1:
+#            params = ss.gamma.fit(rep.values())
+#            gma_decision = estimate_payoff(max(rep.values()),max(EXPECTED_LIFETIME-roundsAlive,10),'Gamma',params)
+            if exp_decision == 1:
                 act = sorted(rep, key=rep.get, reverse=True)[0]
                 return(EXPLOIT,act)
             else:

@@ -46,12 +46,14 @@ def move(roundsalive,repertoire,historyR,historyM,historyA, historyP, historyDem
 	
 	
 	if roundsalive == 0:
-		move = 0
-	elif roundsalive == 1 and len(myrepertoire)==0:
-		move = -1
+		#move = 0
+		return (0,)
+	elif roundsalive == 1 and sum(myrepertoire[1,:])==0:
+		#move = -1
+		return (-1,)
 	else:
 		if myhistory.size:
-			nobs = sum(myhistory[0,:]==1)
+			nobs = sum(myhistory[1,:]==1)
 		else:
 			nobs = 1
 		
@@ -121,11 +123,12 @@ def move(roundsalive,repertoire,historyR,historyM,historyA, historyP, historyDem
 				tmp = myhistory[1,(len(myhistory[1,:])-20):len(myhistory[1,:])] == myhistory[1,len(myhistory[1,:])-1]
 				if sum(tmp) == 20:
 					voodoo = 3 + sum(myhistory[3,myhistory[1,:]>0])/roundsalive
-					if hatbestpayoff < voodoo:
-						move = 0
+					if hatbestpayoff < voodoo or hatbestmove==0:
+						#move = 0
+						return (0,)
 					else:
-						move = hatbestmove
-					return
+						#move = hatbestmove
+						return (1,hatbestmove)
 
 		# the network developed a pathology for this case.  so we use our old
 		# simple minded decision criterion instead.
@@ -133,22 +136,24 @@ def move(roundsalive,repertoire,historyR,historyM,historyA, historyP, historyDem
 			# the network has trouble with high nobserve in low psubc environments, 
 			# so we use the old simple minded decision function again.
 			if nobs > 3:
-				if discountedhatbestpayoff < discountedhatobservablemean:
-					move = 0
+				if discountedhatbestpayoff < discountedhatobservablemean or hatbestmove==0:
+					#move = 0
+					return (0,)
 				else:
-					move = hatbestmove
-				return		   
+					#move = hatbestmove
+					return (1,hatbestmove)		   
 
 			if npoints < 2:
 				# the simple decision function we used before learning a neural network
 				# (i.e. this way is based on theory we developed before tweaking)
 				# we simply look at the difference between the estimated
 				# discounted advantage of observing versus exploiting our best.
-				if discountedhatbestpayoff < discountedhatobservablemean:
-					move = 0
+				if discountedhatbestpayoff < discountedhatobservablemean or hatbestmove==0:
+					#move = 0
+					return (0,)
 				else:
-					move = hatbestmove
-				return
+					#move = hatbestmove
+					return (1,hatbestmove)
 
 		# big black box decision function here:
 		grandstackable = array([nobs, slope, rsquared, discountedhatbestpayoff, discountedhatobservablemean])
@@ -159,40 +164,40 @@ def move(roundsalive,repertoire,historyR,historyM,historyA, historyP, historyDem
 		# by having it try and match the estimate made by a creature with
 		# perfect knowledge of what could be observed and P_actionnoise.
 		# CALL BBB (MAKE SURE DECISION TUPLE IS A GOOD IDEA)
-		d_bbb = bbb(grandstackable, bigmeans, bigwhiteningmatrix, biglayers)
+		d_bbb = bbb(grandstackable, bigmeans, bigwhiteningmatrix, biglayers1_hidbiases, biglayers1_vishid, biglayers2_hidbiases, biglayers2_vishid, biglayers2_hidsums)
 		decision = d_bbb['decision']
 		
-		if array_equal(decision, array([1, 0])):
-			move = 0
+		if array_equal(decision, array([1, 0])) or hatbestmove==0:
+			#move = 0
+			return (0,)
 		elif array_equal(decision, array([0, 1])):
-			move = hatbestmove
+			#move = hatbestmove
+			return (1,hatbestmove)
 
 		
 	# end main if statements
-	
-	if move == 1:
-		return (move, hatbestpayoff)
-	else:
-		return (move,)
 # END MAIN FUNCTION
 
 def estimatebestmoveandpayoff(roundsalive, myhistory, myrepertoire, hatpsubc, hatmean):
 
 	# crawl through the reperoire making sure it is properly updated:
-	for idx, val in enumerate(myrepertoire[0]):
+	for idx, val in list(enumerate(myrepertoire[0])):
 		
 		# everything from the history associated with this given exploit
-		pertinent = myhistory[:,myhistory[2,:] == myrepertoire[0,idx]]
+		if myhistory[:,myhistory[2,:] == myrepertoire[0,idx]].shape[1] > 0:
+			pertinent = myhistory[:,myhistory[2,:] == myrepertoire[0,idx]]
+		else:
+			pertinent = array([[0],[0],[-1],[0]])
 		
 		# if the most recent information about this exploit is from an observe
-		if len(pertinent)==0 or pertinent[1,-1] == 0:
+
+		if pertinent[2,-1] != 0:
+			# if the most recent infromation is from an exploit or an innovate put that in the repertoire
+			myrepertoire[1,idx] = pertinent[3,-1]
+		else:
 			d_observationroller = observationroller(pertinent, hatpsubc)
 			obsrollin = d_observationroller['obsrollin']
 			myrepertoire[1,idx] = obsrollin
-		else:
-			# if the most recent infromation is from an exploit or an innovate put that in the repertoire
-			myrepertoire[1,idx] = pertinent[3,-1]
-
 		tmp = pertinent[0,:]
 		tmp = tmp[-1]
 		timesincelast = roundsalive - tmp
@@ -241,9 +246,13 @@ def multiestimate(myrepertoire, myhistory, roundsalive):
 			sequencei = myhistory[3, myhistory[2,:] == myrepertoire[0,idx]]
 			meanpayoffnumerator2 = meanpayoffnumerator2 + sum(sequencei)
 			meanpayoffdenomenator2 = meanpayoffdenomenator2 + len(sequencei)
-			
+
+
 			# calculate the mean payoff and psubc without using observes
-			pertinenti = myhistory[:, myhistory[2,:] == myrepertoire[0,idx]]
+			if myhistory[:,myhistory[2,:] == myrepertoire[0,idx]].shape[1] > 0:
+				pertinenti = myhistory[:, myhistory[2,:] == myrepertoire[0,idx]]
+			else:
+				pertinenti = array([[0],[0],[-1],[0]])
 			pertinenti = pertinenti[:, pertinenti[1,:] != 0]
 			pertinenti = pertinenti[array([0,3]),:]
 			
@@ -311,7 +320,7 @@ def multiestimate(myrepertoire, myhistory, roundsalive):
 		hatmeann = meanpayoffdenomenator
 		hatmean = meanpayoffnumerator/meanpayoffdenomenator
 	
-	return dict({'hatpsubc': hatpsubc, 'hatpsubcn': hatsubcn, 'hatmean': hatmean, 'hatmeann': hatmeann})
+	return dict({'hatpsubc': hatpsubc, 'hatpsubcn': hatpsubcn, 'hatmean': hatmean, 'hatmeann': hatmeann})
 # END MULTIESTIMATE FUNCTION
 
 def linebuddy(myhistory, hatpsubc, scalefactor):
@@ -365,7 +374,7 @@ def linebuddy(myhistory, hatpsubc, scalefactor):
 		X = ones((len(linelist[0,:]),2))
 		X[:,0]=linelist[0,:]
 		Y = linelist[1,:]
-		beta = asarray(linalg.inv(np.transpose(mat(X))*X)*(np.transpose(mat(X))*np.transpose(mat(Y))))
+		beta = asarray(linalg.inv(transpose(mat(X))*X)*(transpose(mat(X))*transpose(mat(Y))))
 		# we hope that slope along with rsquared gives some idea about how high
 		# or low P_actionnoise is
 		# we take the arctan of the slope so that the machine learned function
@@ -374,7 +383,7 @@ def linebuddy(myhistory, hatpsubc, scalefactor):
 		intercept = beta[2]
 		npoints = len(Y) - 1
 		#sum of squared errors
-		sse = sum(power((np.transpose(mat(beta))*np.transpose(mat(X)) - Y),2))
+		sse = sum(power((transpose(mat(beta))*transpose(mat(X)) - Y),2))
 		# sum of total squared error
 		sst = sum((Y - mean(Y))**2)
 		if sst == 0:
@@ -399,7 +408,7 @@ def	observationroller(pertinent, hatpsubc):
 	#then trim the data to include the most recent exploit and everything
 	#after that
 	tmp = nonzero(pertinent[1,:]!=0)
-	tmp = temp[0]
+	tmp = tmp[0]
 	if tmp.size:
 		lastexploitindex = tmp[len(tmp)-1]
 		pertinent = pertinent[:,lastexploitindex:len(pertinent[0])]
@@ -413,7 +422,7 @@ def	observationroller(pertinent, hatpsubc):
 	timediffs = pertinent[0,len(pertinent[0])-1] - times
 	T = (1-hatpsubc)**timediffs
 	Tdenomenator = sum(T);
-	obsrollin = sum(values * np.transpose(mat(T)))/Tdenomenator;
+	obsrollin = sum(values * transpose(mat(T)))/Tdenomenator;
 	
 	return dict({'obsrollin': obsrollin})
 #END OBERSERVATIONROLLER FUNCTION
@@ -426,10 +435,10 @@ def	observationroller(pertinent, hatpsubc):
 # with line searches to optimize the weights in the network (this is just a
 # very nice fast version of the backpropagation algorithm).  
 # we also do standard preprocessing to the data (e.g. whitening).
-def bbb(grandstackable, bigmeans, bigwhiteningmatrix, biglayers):
+def bbb(grandstackable, bigmeans, bigwhiteningmatrix, biglayers1_hidbiases, biglayers1_vishid, biglayers2_hidbiases, biglayers2_vishid, biglayers2_hidsums):
 	# prepare the input data for the network (subtract means and whiten):
-	data = grandstackable[0:3] - np.transpose(bigmeans)
-	data = np.transpose(bigwhiteningmatrix * np.transpose(mat(data)))
+	data = grandstackable[0:3] - transpose(bigmeans)
+	data = transpose(bigwhiteningmatrix * transpose(mat(data)))
 	discountedhatbest = grandstackable[3]
 	discountedobs = grandstackable[4]
 	
@@ -459,3 +468,6 @@ def bbb(grandstackable, bigmeans, bigwhiteningmatrix, biglayers):
 	
 	return dict({'decision': decision});
 #END BIGBLACKBOX BBB FUNCTION
+
+def observe_who(exploiterData):
+	return sorted(exploiterData,key=lambda x:x[AGE],reverse=True)
