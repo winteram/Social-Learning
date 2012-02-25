@@ -128,7 +128,7 @@ def move(roundsalive,repertoire,historyR,historyM,historyA, historyP, historyDem
 						return (0,)
 					else:
 						#move = hatbestmove
-						return (1,hatbestmove)
+						return (1,int(hatbestmove))
 
 		# the network developed a pathology for this case.  so we use our old
 		# simple minded decision criterion instead.
@@ -141,7 +141,7 @@ def move(roundsalive,repertoire,historyR,historyM,historyA, historyP, historyDem
 					return (0,)
 				else:
 					#move = hatbestmove
-					return (1,hatbestmove)		   
+					return (1,int(hatbestmove))
 
 			if npoints < 2:
 				# the simple decision function we used before learning a neural network
@@ -153,7 +153,7 @@ def move(roundsalive,repertoire,historyR,historyM,historyA, historyP, historyDem
 					return (0,)
 				else:
 					#move = hatbestmove
-					return (1,hatbestmove)
+					return (1,int(hatbestmove))
 
 		# big black box decision function here:
 		grandstackable = array([nobs, slope, rsquared, discountedhatbestpayoff, discountedhatobservablemean])
@@ -172,7 +172,7 @@ def move(roundsalive,repertoire,historyR,historyM,historyA, historyP, historyDem
 			return (0,)
 		elif array_equal(decision, array([0, 1])):
 			#move = hatbestmove
-			return (1,hatbestmove)
+			return (1,int(hatbestmove))
 
 		
 	# end main if statements
