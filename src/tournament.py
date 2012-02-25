@@ -25,7 +25,6 @@ logger=logging.getLogger('SLSTournament')
 # "observe_who" must return:
 #    models, an ordered list of indices corresponding to modelInfo
 
-logger.info("Loading agents")
 # Load agents from agent directory
 agent_dir = 'agents/'
 agentfiles = os.listdir(agent_dir)
@@ -55,7 +54,7 @@ except IOError:
     exit(0)
 
 
-logger.info("Initializing...")
+
 ##TODO: Allow importing of parameters with input file
 # Initialize parameters in model
 canPlayRefine = False # if refine move is available
@@ -144,8 +143,6 @@ class statsDict:
         self.lifespans = []
 
     def report(self):
-        if len(self.lifespans)==0:
-            self.lifespans = [0,0]
         outputline = str(self.aliveAgents)+","
         outputline += str(self.innovate)+","
         outputline += str(self.observe)+","
@@ -180,12 +177,10 @@ else:
         Agents[i].strategy = initStrategy
         aliveAgents.append(i) # list of currently playing agents
 
-logger.info("Starting run")
+
 # Loop through each generation
 for generation in range(ngen): 
     # initialize stats for this round
-    if generation % 100 == 0:
-        logger.info("Starting generation %d", generation) 
     roundStats = {}
     for strategy in strategies:
         roundStats[strategy] = statsDict()
@@ -209,7 +204,7 @@ for generation in range(ngen):
 	theMove = globals()[Agents[i].strategy].move(Agents[i].roundsAlive, Agents[i].rep, Agents[i].historyRounds, Agents[i].historyMoves, Agents[i].historyActs, Agents[i].historyPayoffs, Agents[i].historyDemes, Agents[i].currentDeme, canChooseModel,canPlayRefine,multipleDemes)
         agentMove = theMove[0]
         if len(theMove) > 1:
-            agentAction = int(theMove[1])
+            agentAction = theMove[1]
 	# Do move:
         # INNOVATE
         if agentMove == INNOVATE:
