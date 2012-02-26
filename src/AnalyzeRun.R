@@ -6,7 +6,7 @@ setwd(srcdir)
 require(ggplot2)
 theme_set(theme_bw())
 
-runname <- "SLS_run_120225_1405.csv"
+runname <- "SLS_run_120225_1728.csv"
 rundate <- strsplit(runname, '_')[[1]][3]
 runtime <- strsplit(strsplit(runname, '_')[[1]][4],'\\.')[[1]][1]
 SLS <- read.csv(paste(datadir,runname,sep=""))
