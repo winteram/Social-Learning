@@ -14,8 +14,9 @@ import math
 import warnings
 from copy import copy
 
-
 import inspect
+import numpy as np
+import numpy.random as mtrand
 from numpy import alltrue, where, arange, putmask, \
      ravel, take, ones, sum, shape, product, repeat, reshape, \
      zeros, floor, logical_and, log, sqrt, exp, arctanh, tan, sin, arcsin, \
@@ -23,8 +24,6 @@ from numpy import alltrue, where, arange, putmask, \
 from numpy import atleast_1d, polyval, ceil, place, extract, \
      any, argsort, argmax, vectorize, r_, asarray, nan, inf, pi, isinf, \
      power, NINF, empty
-import numpy as np
-import numpy.random as mtrand
 from numpy import flatnonzero as nonzero
 from numpy import atleast_1d, eye, mgrid, argmin, zeros, shape, \
     squeeze, vectorize, asarray, absolute, sqrt, Inf, asfarray, isinf
@@ -9549,10 +9548,10 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
         if DistName == 'Expon' :
             assert len(params)==2
             (loc, lamb) = params
-            max_dist = int(round(ss.expon.ppf(0.9999999999, loc, lamb)))
+            max_dist = int(round(expon.ppf(0.9999999999, loc, lamb)))
 
             for i in range(1,max_dist):
-                EstPos_temp = ss.expon.cdf(CurrMax + i + Delta, loc, lamb) - ss.expon.cdf(CurrMax + i - Delta, loc, lamb)
+                EstPos_temp = expon.cdf(CurrMax + i + Delta, loc, lamb) - expon.cdf(CurrMax + i - Delta, loc, lamb)
                 # for continuous distribution, P[X=x] is calculated as Cdf[x+0.5] - Cdf[x-0.5]. 
                 EstPayoff_temp = EstPos_temp * i
                 EstPayoff_total = EstPayoff_total + EstPayoff_temp
@@ -9560,20 +9559,20 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
         elif DistName == 'Poiss' :
             assert len(params)==2
             (loc,mu) = params
-            max_dist = int(round(ss.poisson.ppf(0.9999999999, loc, mu)))
+            max_dist = int(round(poisson.ppf(0.9999999999, loc, mu)))
 
             for i in range(1,max_dist):
-                EstPos_temp = ss.poisson.cdf(CurrMax + i, mu, loc=loc)
+                EstPos_temp = poisson.cdf(CurrMax + i, mu, loc=loc)
                 EstPayoff_temp= EstPos_temp * i
                 EstPayoff_total = EstPayoff_total + EstPayoff_temp
 
         elif DistName == 'Gamma' :
             assert len(params)==3
             (a,loc,lamb) = params
-            max_dist = int(round(ss.gamma.ppf(0.9999999999, a, loc, lamb)))
+            max_dist = int(round(gamma.ppf(0.9999999999, a, loc, lamb)))
 
             for i in range(1,max_dist):
-                EstPos_temp = ss.gamma.cdf(CurrMax + i, a, loc=loc, scale=lamb)
+                EstPos_temp = gamma.cdf(CurrMax + i, a, loc=loc, scale=lamb)
                 EstPayoff_temp= EstPos_temp * i
                 EstPayoff_total = EstPayoff_total + EstPayoff_temp
 

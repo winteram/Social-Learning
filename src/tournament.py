@@ -58,7 +58,7 @@ except IOError:
 ##TODO: Allow importing of parameters with input file
 # Initialize parameters in model
 canPlayRefine = False # if refine move is available
-canChooseModel = True # if observe_who is an option
+canChooseModel = False # if observe_who is an option
 multipleDemes = False # if spatial extension is enabled
 runIn = False # If there is a run-in time for the agents to develop
 
@@ -74,6 +74,7 @@ pchg = 0.05 # probability of environment changing
 pmut = 0.02 # probability of mutation
 pmig = 0.03 # probability of migration (if spatial extension is enabled)
 pdie = 0.02 # probability of dying
+pmax = 50 / lambd
 
 copy_error = 0.01
 sigma = 0.2
@@ -124,8 +125,8 @@ class newagent:
 # Initialize structures in model
 fitness = [] # fitness landscape
 for i in range(3):
-#    tmp = [round(2*random.expovariate(lambd)**2) for x in range(nact)]
-    tmp = [round(2*random.lognormvariate(lgmu,lgsd)**2) for x in range(nact)]
+    tmp = [round(2*random.expovariate(lambd)**2) for x in range(nact)]
+#    tmp = [round(2*random.lognormvariate(lgmu,lgsd)**2) for x in range(nact)]
     fitness.append(tmp)
 aliveAgents = []
 Agents = []
@@ -282,7 +283,7 @@ for generation in range(ngen):
         elif agentMove == REFINE and canPlayRefine:
             roundStats[Agents[i].strategy].refine += 1
             if agentAction in Agents[i].rep.keys():
-                payoff = fitness[Agents[i].currentDeme][agentAction] + 1
+                payoff = fitness[Agents[i].currentDeme][agentAction] + 1  #pmax * (0.05/(1-0.95^rmax)) * np.sum(
                 Agents[i].rep[agentAction] = payoff
 
         else:
@@ -335,8 +336,8 @@ for generation in range(ngen):
     for i in range(len(fitness)):
         for action in range(len(fitness[i])):
             if random.random() < pchg:
-                fitness[i][action] = round(2*random.lognormvariate(lgmu,lgsd)**2)
-#                fitness[i][action] = round(2*random.expovariate(lambd)**2)
+#                fitness[i][action] = round(2*random.lognormvariate(lgmu,lgsd)**2)
+                fitness[i][action] = round(2*random.expovariate(lambd)**2)
 
                 
     # Move agents if demes are enabled
