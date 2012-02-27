@@ -1,0 +1,5 @@
+generation,strategy,nAgents,nInnovate,nObserve,nExploit,nRefine,totalPayoffs,avgLifespan,stdLifespan,medLifespan,maxLifespan
+0,estagent,60,0,60,0,0,0,1.0,0.0,1.0,1
+0,dmn,40,0,40,0,0,0,1.0,0.0,1.0,1
+1,estagent,60,60,0,0,0,0,2.0,0.0,2.0,2
+1,dmn,40,40,0,0,0,0,2.0,0.0,2.0,2

@@ -58,7 +58,7 @@ except IOError:
 ##TODO: Allow importing of parameters with input file
 # Initialize parameters in model
 canPlayRefine = False # if refine move is available
-canChooseModel = False # if observe_who is an option
+canChooseModel = True # if observe_who is an option
 multipleDemes = False # if spatial extension is enabled
 runIn = False # If there is a run-in time for the agents to develop
 
@@ -68,6 +68,8 @@ nact = 100 # number of possible actions
 nObserve = 5 # number of models, between 1--10
 
 lambd = 0.8 # 1 / mean of exponential distribution
+lgmu = 1.25 # mean of lognormal
+lgsd = 0.8 # 
 pchg = 0.05 # probability of environment changing
 pmut = 0.02 # probability of mutation
 pmig = 0.03 # probability of migration (if spatial extension is enabled)
@@ -122,7 +124,8 @@ class newagent:
 # Initialize structures in model
 fitness = [] # fitness landscape
 for i in range(3):
-    tmp = [round(2*random.expovariate(lambd)**2) for x in range(nact)]
+#    tmp = [round(2*random.expovariate(lambd)**2) for x in range(nact)]
+    tmp = [round(2*random.lognormvariate(lgmu,lgsd)**2) for x in range(nact)]
     fitness.append(tmp)
 aliveAgents = []
 Agents = []
@@ -149,10 +152,13 @@ class statsDict:
         outputline += str(self.exploit)+","
         outputline += str(self.refine)+","
         outputline += str(self.totalPayoffs)+","
-        outputline += str(mean(self.lifespans))+","
-        outputline += str(std(self.lifespans))+","
-        outputline += str(median(self.lifespans))+","
-        outputline += str(max(self.lifespans))
+        if len(self.lifespans)>0:
+            outputline += str(mean(self.lifespans))+","
+            outputline += str(std(self.lifespans))+","
+            outputline += str(median(self.lifespans))+","
+            outputline += str(max(self.lifespans))
+        else:
+            outputline += "0,0,0,0"
         return outputline
 
 
@@ -329,13 +335,16 @@ for generation in range(ngen):
     for i in range(len(fitness)):
         for action in range(len(fitness[i])):
             if random.random() < pchg:
-                fitness[i][action] = round(2*random.expovariate(lambd)**2)
+                fitness[i][action] = round(2*random.lognormvariate(lgmu,lgsd)**2)
+#                fitness[i][action] = round(2*random.expovariate(lambd)**2)
 
+                
     # Move agents if demes are enabled
     if multipleDemes:
         for i in aliveAgents:
             if random.random() < pmig:
-                newdeme = [0,1,2].remove(Agents[i].currentDeme)
+                newdeme = [0,1,2]
+                newdeme.remove(Agents[i].currentDeme)
                 Agents[i].currentDeme = random.choice(newdeme)
                 
     for strategy in roundStats:

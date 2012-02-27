@@ -39,6 +39,7 @@ for(lamb in c(0.2,0.5,1,2,4,8)) {
 }
 names(poisfit) <- c("lamb","repsize","lambfit.mu","lambfit.sd")
 poisfit <- transform(poisfit, z=(lambfit.mu-lamb)/lambfit.sd)
+
 ggplot(poisfit, aes(x=repsize,y=lambfit.mu,color=factor(lamb))) + 
   geom_line() + 
   geom_errorbar(aes(ymin=lambfit.mu-lambfit.sd,ymax=lambfit.mu+lambfit.sd)) +
@@ -46,7 +47,13 @@ ggplot(poisfit, aes(x=repsize,y=lambfit.mu,color=factor(lamb))) +
 
 ggplot(poisfit, aes(x=lamb,y=lambfit.mu,color=repsize,size=lambfit.sd)) + 
   geom_point() +
-  scale_y_log() + scale_x_log()
+  scale_y_log() +
+  geom_abline(slope=1, intercept=0)
+
+ggplot(poisfit, aes(x=lamb,y=lambfit.mu,color=repsize,size=lambfit.sd)) + 
+  geom_point() +
+  ylim(0,10) +
+  geom_abline(slope=1, intercept=0) 
 
 lambs <- c(0.2,0.5,1,2,4,8)
 repsizes <- c(5,10,15,20,25,50,75,100)

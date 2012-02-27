@@ -6,6 +6,7 @@ from scipy import optimize
 
 
 nsamples = 1000
+possible_fcns = ["expon","gamma","pois","uniform","powerlaw","lognorm"]
 
 # take in repertoire, return best fitting exponential parameters and error estiamtes
 
@@ -26,7 +27,6 @@ def fitPwr( rep ):
     fiterr = errfunc(lamb,expkeys,expval)
 
     return (exp(lamb), sqrt(mean(fiterr**2)))
-
 
 for amp in range(20,50,5):
     for truelamb in [x * 0.5 for x in range(1, 10)]:
