@@ -9632,7 +9632,7 @@ def observe_who(exploiterData):
     #'All values except index have error applied'
     # older agents have observed more
     # total_payoffs have accessed high value actions
-    alpha = 0.2
+    alpha = 0.05
     return sorted(exploiterData,key=lambda x:alpha*x[TOTAL_PAY]+(1-alpha)*x[AGE],reverse=True) # copy most rewarded
 
 
