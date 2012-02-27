@@ -58,7 +58,7 @@ except IOError:
 ##TODO: Allow importing of parameters with input file
 # Initialize parameters in model
 canPlayRefine = False # if refine move is available
-canChooseModel = False # if observe_who is an option
+canChooseModel = True # if observe_who is an option
 multipleDemes = False # if spatial extension is enabled
 runIn = False # If there is a run-in time for the agents to develop
 
@@ -343,7 +343,8 @@ for generation in range(ngen):
     if multipleDemes:
         for i in aliveAgents:
             if random.random() < pmig:
-                newdeme = [0,1,2].remove(Agents[i].currentDeme)
+                newdeme = [0,1,2]
+                newdeme.remove(Agents[i].currentDeme)
                 Agents[i].currentDeme = random.choice(newdeme)
                 
     for strategy in roundStats:

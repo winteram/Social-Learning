@@ -7,8 +7,8 @@ import numpy as np
 import scipy.stats as ss
 
 def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs, historyDemes, currentDeme, canChooseModel, canPlayRefine, multipleDemes):
-    REGROUND = 5 # number of rounds to observe before making decisions when moved demes
-    ACTTHRESH = 50 # number of actions to know before deciding to act
+    REGROUND = 2 # number of rounds to observe before making decisions when moved demes
+    ACTTHRESH = 10 # number of actions to know before deciding to act
     EXPECTED_LIFETIME = 50
     
     if roundsAlive==0:
@@ -17,11 +17,17 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
         return (INNOVATE,)
     else:
         # check if demes are enabled
-        if multipleDemes and historyDemes[-REGROUND].count(currentDeme) < REGROUND and len(rep.items())<ACTTHRESH:
-            return (OBSERVE,)
+        #if multipleDemes:
+        #    steps_back = min(len(historyDemes),REGROUND)
+        #    if historyDemes[-steps_back:].count(currentDeme) < steps_back and len(rep.items())<ACTTHRESH:
+        #        return (OBSERVE,)
 
         if len(rep.items()) < 10 or np.std(rep.values())==0:
-            return (OBSERVE,)
+            if len(historyRounds)>10 and len(rep.items())>0 and np.random.random()<0.1:
+                act = sorted(rep, key=rep.get, reverse=True)[0]
+                return(EXPLOIT,act)
+            else:
+                return (OBSERVE,)
         else:
             params = ss.expon.fit(rep.values())
             exp_decision = estimate_payoff(max(rep.values()),max(EXPECTED_LIFETIME-roundsAlive,10),'Expon',params)
