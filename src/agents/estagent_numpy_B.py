@@ -47,20 +47,13 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
         elif DistName == 'Poiss' :
             assert len(params)==2
             (loc,mu) = params
-            running = True
-            Curr_step = 2
-            while running :
-                if Poisson_cdf(CurrMax + Curr_step, mu) > 0.9999999999 : # check x should be how larger to cover 0.9999 
-                    running = False
-                    Payoff_step = Curr_step
-#                    print "new Payoff_step is : ", Payoff_step
-                else :
-                    Curr_step = Curr_step + 1
-
-            for i in range(1,Payoff_step):
+            i = 1
+            EstPos_temp = Poisson_pmf(CurrMax + i, mu)
+            while EstPos_temp > epsilon:
                 EstPos_temp = Poisson_pmf(CurrMax + i, mu)
                 EstPayoff_temp= EstPos_temp * i
                 EstPayoff_total = EstPayoff_total + EstPayoff_temp
+                i = i+1
 
         else :
             ErrorFlag = 1 # set a error flag
@@ -68,7 +61,7 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
         #print "Current Payoff is : " , CurrPayoff
         #print "Estimated Payoff is : " , EstPayoff_total
 
-        if (EstPayoff_total > CurrPayoff) and  (ErrorFlag == 0):
+        if (EstPayoff_total > CurrPayoff) and (ErrorFlag == 0):
             #print "Estimated Payoff is larger, take Observation: "
             Decision_result = 0
         elif (EstPayoff_total <= CurrPayoff) and  (ErrorFlag == 0) :
@@ -109,7 +102,7 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
             if historyDemes[-steps_back:].count(currentDeme) < steps_back and len(rep.items())<ACTTHRESH:
                 return (OBSERVE,)
 
-        if len(rep.items()) < 10 or np.std(rep.values())==0:
+        if len(rep.items()) < ACTTHRESH or np.std(rep.values())==0:
             sacrifice = np.random.random()
             if len(historyRounds)>10 and len(rep.items())>0:
                 if sacrifice < 0.05:
@@ -138,7 +131,6 @@ def observe_who(exploiterData):
     #'All values except index have error applied'
     # older agents have observed more
     # total_payoffs have accessed high value actions
-    alpha = 0.2
-    return sorted(exploiterData,key=lambda x:alpha*x[TOTAL_PAY]+(1-alpha)*x[AGE],reverse=True) # copy most rewarded
+    return sorted(exploiterData,key=lambda x:alpha*x[TOTAL_PAY]+(1-alpha)*(x[AGE]*x[N_OFFSPRING]),reverse=True) # copy most rewarded
 
 
