@@ -7,9 +7,10 @@ import numpy as np
 
 
 def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs, historyDemes, currentDeme, canChooseModel, canPlayRefine, multipleDemes):
+    epsilon = 0.001
 
     def Exponential_cdf(x, lambda1):
-        expon_cdf = 1- np.exp(-lambda1*x)
+        expon_cdf = 1-np.exp(-lambda1*x)
         return expon_cdf
 
     def Poisson_pmf(x, lambda1):
@@ -34,23 +35,14 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
         if DistName == 'Expon' :
             assert len(params)==2
             (loc, lamb) = params
-            running = True
-            Curr_step = CurrMax * 2
-            while running :
-                expcdf = Exponential_cdf(CurrMax + Curr_step, lamb)
-                if  expcdf > 0.99999999999999 : 
-                    Curr_step = np.floor(Curr_step / 2) + 10
-                elif expcdf < 0.99999 :
-                    Curr_step = np.floor(Curr_step * 2)
-                else :
-                    running = False
-                    Payoff_step = int(Curr_step)
-
-            for i in range(1,Payoff_step):
+            i = 1
+            EstPos_temp = Exponential_cdf(CurrMax + i + Delta, lamb) - Exponential_cdf(CurrMax + i - Delta, lamb)
+            while EstPos_temp > epsilon:
                 EstPos_temp = Exponential_cdf(CurrMax + i + Delta, lamb) - Exponential_cdf(CurrMax + i - Delta, lamb)
                 # for continuous distribution, P[X=x] is calculated as Cdf[x+0.5] - Cdf[x-0.5]. 
                 EstPayoff_temp = EstPos_temp * i
                 EstPayoff_total = EstPayoff_total + EstPayoff_temp
+                i = i+1
 
         elif DistName == 'Poiss' :
             assert len(params)==2
@@ -118,19 +110,27 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
                 return (OBSERVE,)
 
         if len(rep.items()) < 10 or np.std(rep.values())==0:
-            if len(historyRounds)>10 and len(rep.items())>0 and np.random.random()<0.1:
-                act = sorted(rep, key=rep.get, reverse=True)[0]
-                return(EXPLOIT,act)
+            sacrifice = np.random.random()
+            if len(historyRounds)>10 and len(rep.items())>0:
+                if sacrifice < 0.05:
+                    act = sorted(rep, key=rep.get, reverse=True)[0]
+                    return(EXPLOIT,act)
+                elif sacrifice < 0.1:
+                    return (INNOVATE,)
+                else:
+                    return (OBSERVE,)
             else:
                 return (OBSERVE,)
         else:
             params = est_fit(rep.values())
+            if params[0] < epsilon:
+                return (OBSERVE,)
             exp_decision = estimate_payoff(max(rep.values()),max(EXPECTED_LIFETIME-roundsAlive,10),'Expon',params)
             if exp_decision == 1:
                 act = sorted(rep, key=rep.get, reverse=True)[0]
-                return(EXPLOIT,act)
+                return (EXPLOIT,act)
             else:
-                return(OBSERVE,)
+                return (OBSERVE,)
 
 def observe_who(exploiterData):
     #'This function MUST return the given list of tuples, exploiterData, sorted by preference for copying.'
