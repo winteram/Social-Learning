@@ -90,7 +90,7 @@ def move(roundsAlive,rep,historyRounds,historyMoves,historyActs, historyPayoffs,
         logy = np.log(y) 
         A = np.vstack([xvals, np.ones(len(xvals))]).T
         params = np.linalg.lstsq(A, logy)[0]
-        return(params[1],-params[0])
+        return(params[1],-1.5*params[0])
 
 
 
