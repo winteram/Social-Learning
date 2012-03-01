@@ -9,6 +9,7 @@ import pprint
 import datetime
 from scipy.stats import bernoulli,poisson,norm,expon,uniform
 from numpy import mean,std,median,max
+import numpy.random as npr
 from moves import * #bring in standard names for moves
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -70,6 +71,7 @@ nObserve = 5 # number of models, between 1--10
 lambd = 0.8 # 1 / mean of exponential distribution
 lgmu = 1.25 # mean of lognormal
 lgsd = 0.8 # 
+alpha = 1.8 #
 pchg = 0.05 # probability of environment changing
 pmut = 0.02 # probability of mutation
 pmig = 0.03 # probability of migration (if spatial extension is enabled)
@@ -125,7 +127,8 @@ class newagent:
 # Initialize structures in model
 fitness = [] # fitness landscape
 for i in range(3):
-    tmp = [round(2*random.expovariate(lambd)**2) for x in range(nact)]
+#    tmp = [round(2*random.expovariate(lambd)**2) for x in range(nact)]
+    tmp = [round(2*npr.zipf(alpha)) for x in range(nact)]
 #    tmp = [round(2*random.lognormvariate(lgmu,lgsd)**2) for x in range(nact)]
     fitness.append(tmp)
 aliveAgents = []
@@ -337,7 +340,8 @@ for generation in range(ngen):
         for action in range(len(fitness[i])):
             if random.random() < pchg:
 #                fitness[i][action] = round(2*random.lognormvariate(lgmu,lgsd)**2)
-                fitness[i][action] = round(2*random.expovariate(lambd)**2)
+#                fitness[i][action] = round(2*random.expovariate(lambd)**2)
+                fitness[i][action] = round(2*npr.zipf(alpha))
 
                 
     # Move agents if demes are enabled
